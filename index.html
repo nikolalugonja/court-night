@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Squash Night</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<style>
+:root{
+--bg:#eef1ee; --card:#ffffff; --ink:#15181a; --muted:#5f6a6b; --line:#d9dfdc;
+--red:#e5322d; --red-ink:#ffffff; --floor:#dcb888; --floor-ink:#3b2a14;
+--yellow:#f2d541; --good:#17804f; --soft:#e4e9e6;
+color-scheme:light;
+box-sizing:border-box;
+padding-top:env(safe-area-inset-top,0px);
+padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+:root:not([data-theme="light"]){
+--bg:#0e1211; --card:#171c1b; --ink:#eef2ef; --muted:#9aa7a4; --line:#2a3331;
+--red:#ff5148; --red-ink:#1a0504; --floor:#4a3a22; --floor-ink:#f0dcb8;
+--yellow:#f2d541; --good:#4fd18b; --soft:#202726; color-scheme:dark;
+}
+}
+:root[data-theme="dark"]{
+--bg:#0e1211; --card:#171c1b; --ink:#eef2ef; --muted:#9aa7a4; --line:#2a3331;
+--red:#ff5148; --red-ink:#1a0504; --floor:#4a3a22; --floor-ink:#f0dcb8;
+--yellow:#f2d541; --good:#4fd18b; --soft:#202726; color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.4;padding-bottom:84px}
+main{max-width:560px;margin:0 auto;padding:16px 14px 24px}
+h1,h2,h3{font-stretch:112%;font-weight:800;letter-spacing:-.01em;margin:0}
+.top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.ball{width:38px;height:38px;border-radius:50%;background:#16181a;position:relative;flex:none}
+.ball::before,.ball::after{content:"";position:absolute;width:7px;height:7px;border-radius:50%;background:var(--yellow)}
+.ball::before{left:9px;top:10px}.ball::after{right:9px;bottom:10px}
+.top h1{font-size:26px;line-height:1}
+.top p{margin:2px 0 0;color:var(--muted);font-size:13px}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));z-index:5}
+nav button{flex:1;border:0;background:none;padding:10px 2px;border-radius:12px;font-weight:700;font-size:14px;color:var(--muted)}
+nav button.on{background:var(--ink);color:var(--bg)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 14px 12px;margin:0 -14px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;min-width:46px;height:46px;border-radius:14px;border:1.5px solid var(--line);background:var(--card);font-weight:800;font-size:17px;position:relative;padding:0 14px}
+.chip.on{background:var(--red);border-color:var(--red);color:var(--red-ink)}
+.chip.done::after{content:"";position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:var(--good)}
+.chip.on.done::after{background:var(--red-ink)}
+.chip.name{height:40px;font-size:15px;min-width:0}
+.help{background:var(--soft);border-radius:14px;padding:10px 12px;font-size:14px;margin-bottom:14px}
+.help b{font-weight:800}
+.timer{display:flex;align-items:center;gap:10px;background:var(--ink);color:var(--bg);border-radius:18px;padding:10px 12px;margin-bottom:14px}
+.timer .t{font-stretch:112%;font-weight:800;font-size:34px;font-variant-numeric:tabular-nums;line-height:1;flex:1}
+.timer.end{background:var(--red);color:var(--red-ink)}
+.timer .msg{font-size:12px;opacity:.85;display:block;font-weight:700;font-stretch:100%;margin-top:3px}
+.timer button{border:0;border-radius:12px;padding:10px 14px;font-weight:700;background:var(--bg);color:var(--ink)}
+.court{background:var(--card);border:1px solid var(--line);border-radius:20px;overflow:hidden;margin-bottom:14px}
+.court .ch{background:var(--floor);color:var(--floor-ink);padding:8px 14px;display:flex;justify-content:space-between;align-items:center;font-stretch:112%;font-weight:800;font-size:15px;border-bottom:4px solid var(--red)}
+.court .ch small{font-weight:700;font-stretch:100%;font-size:12px}
+.side{display:flex;align-items:center;gap:10px;padding:12px 14px}
+.side+.vs{display:block}
+.vs{text-align:center;font-weight:800;font-size:12px;color:var(--muted);border-top:1px dashed var(--line);border-bottom:1px dashed var(--line);padding:3px 0;background:var(--soft)}
+.side.lead{background:color-mix(in srgb,var(--good) 10%,transparent)}
+.names{flex:1;min-width:0}
+.tl{font-size:12px;color:var(--muted);font-weight:700;margin-bottom:2px}
+.pl{font-weight:800;font-size:22px;line-height:1.25}
+.hs{display:inline-block;font-size:12px;font-weight:800;background:var(--yellow);color:#1a1a00;border-radius:99px;padding:2px 8px;margin-top:3px}
+.pl i{font-style:normal;color:var(--muted);font-weight:600;font-size:16px}
+.sc{display:flex;align-items:center;gap:8px}
+.sc button{width:50px;height:50px;border-radius:14px;border:1.5px solid var(--line);background:var(--soft);font-size:26px;font-weight:700;line-height:1}
+.sc button.inc{background:var(--red);border-color:var(--red);color:var(--red-ink)}
+.sc .n{min-width:44px;text-align:center;font-stretch:112%;font-weight:900;font-size:40px;font-variant-numeric:tabular-nums;line-height:1}
+.pillrow{padding:8px 14px 12px;display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--line)}
+.pill{font-size:12px;font-weight:700;border-radius:99px;padding:4px 10px;background:var(--soft);color:var(--muted)}
+.pill.win{background:var(--good);color:#fff}
+.rest{display:flex;gap:12px;align-items:center;background:var(--soft);border-radius:18px;padding:12px 14px;margin-bottom:14px}
+.rest b{font-size:18px}
+.rest span{color:var(--muted);font-size:14px;display:block}
+.navrow{display:flex;gap:10px}
+.btn{flex:1;border:1.5px solid var(--line);background:var(--card);border-radius:14px;padding:13px;font-weight:800}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.danger{background:var(--red);border-color:var(--red);color:var(--red-ink)}
+.rc{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:10px}
+.rc.cur{border-color:var(--red);box-shadow:0 0 0 2px var(--red) inset}
+.rc.me{border-color:var(--good)}
+.rc .rh{display:flex;justify-content:space-between;margin-bottom:6px;font-weight:800;font-stretch:112%}
+.rc .rh span{font-weight:600;font-stretch:100%;font-size:13px;color:var(--muted)}
+.m{display:flex;justify-content:space-between;gap:8px;font-size:15px;padding:3px 0}
+.m i{font-style:normal;color:var(--muted);font-size:12px;font-weight:700;flex:none;width:20px}
+.m div{flex:1}
+.m em{font-style:normal;font-weight:800;font-variant-numeric:tabular-nums}
+.mine{font-size:16px;margin:2px 0}
+.mine b{font-weight:800}
+.mine .rs{color:var(--good);font-weight:800}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;font-size:14px}
+th,td{padding:10px 6px;text-align:center;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+th{font-size:12px;color:var(--muted);font-weight:700;background:var(--soft)}
+td.nm,th.nm{text-align:left;padding-left:12px;font-weight:800;font-size:16px}
+tr:last-child td{border-bottom:0}
+td.rk{width:30px;font-weight:900;font-stretch:112%}
+tr.top1 td{background:color-mix(in srgb,var(--yellow) 30%,transparent)}
+td.pts{font-weight:900}
+.note{font-size:13px;color:var(--muted);margin:10px 2px}
+.h2{font-size:20px;margin:6px 0 10px}
+.rule{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.rule h3{font-size:17px;margin-bottom:6px}
+.rule ul{margin:4px 0 0;padding-left:20px}
+.rule li{margin:5px 0;font-size:15px}
+.stage{font-stretch:112%;font-weight:800;font-size:18px;margin:18px 0 8px}
+.champ{background:var(--yellow);color:#1a1a00;border-radius:18px;padding:16px;margin-bottom:14px;text-align:center}
+.champ b{display:block;font-stretch:112%;font-size:24px;font-weight:900}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<nav id="nav">
+<button data-act="tab" data-tab="play">Play</button>
+<button data-act="tab" data-tab="draw">Draw</button>
+<button data-act="tab" data-tab="table">Table</button>
+<button data-act="tab" data-tab="finals">Finals</button>
+<button data-act="tab" data-tab="rules">Rules</button>
+</nav>
+<script>
+(function(){
+"use strict";
+var KEY="squash-night-v4";
+var NAMES=["Nikola","Veljko","Gezi","Michal","Serena","Ivan","Sanja","Micaela","Hannah"];
+var GAME=420;                    // 7 minutes per round
+var SWAP=60;                     // about 1 minute to change over
+// Fixed draw, identical for everyone: 2 singles matches per round, [player, player]
+var ROUNDS=[[[3,4],[8,6]],[[5,7],[0,1]],[[2,0],[5,6]],[[3,1],[4,8]],[[7,6],[2,1]],[[5,8],[0,3]],[[2,7],[4,6]],[[1,5],[0,4]],[[3,2],[8,7]]];
+function load(){try{var s=localStorage.getItem(KEY);return s?JSON.parse(s):null}catch(e){return null}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+var S=load()||{};
+S.cur=S.cur||0;S.tab=S.tab||"play";S.sc=S.sc||{};S.me=(S.me===undefined?null:S.me);S.fin=S.fin||{locked:false,seeds:null};
+var armed=null;
+var T={left:GAME,run:false,end:0,iv:null,done:false};
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function nm(i){return esc(NAMES[i])}
+function raw(k){return S.sc[k]||[0,0]}
+function played(k){var s=raw(k);return s[0]+s[1]>0}
+function eff(k){return raw(k)}
+function rk(ri,mi){return "r"+ri+"c"+mi}
+function roundDone(ri){return played(rk(ri,0))&&played(rk(ri,1))}
+function anyScores(){for(var r=0;r<9;r++)for(var m=0;m<2;m++)if(played(rk(r,m)))return true;return false}
+function resting(ri){var p=[];ROUNDS[ri].forEach(function(m){p=p.concat(m)});return NAMES.map(function(n,i){return i}).filter(function(i){return p.indexOf(i)<0})}
+function names(list){return list.map(nm).join(", ")}
+function stats(){
+var st=NAMES.map(function(n,i){return {i:i,name:n,pl:0,w:0,d:0,l:0,pf:0,pa:0}});
+ROUNDS.forEach(function(r,ri){
+r.forEach(function(m,mi){
+var k=rk(ri,mi);if(!played(k))return;
+var s=eff(k),res=s[0]>s[1]?1:s[0]<s[1]?-1:0;
+function add(i,f,a,rr){var x=st[i];x.pl++;x.pf+=f;x.pa+=a;if(rr>0)x.w++;else if(rr<0)x.l++;else x.d++}
+add(m[0],s[0],s[1],res);add(m[1],s[1],s[0],-res);
+});
+});
+st.forEach(function(s){s.pts=s.w*2+s.d;s.ppg=s.pl?s.pts/s.pl:0;s.diff=s.pf-s.pa;s.avgd=s.pl?s.diff/s.pl:0});
+st.sort(function(a,b){return b.ppg-a.ppg||b.avgd-a.avgd||b.pf-a.pf||a.i-b.i});
+return st;
+}
+function fmt(s){s=Math.max(0,Math.ceil(s));var m=Math.floor(s/60),x=s%60;return m+":"+(x<10?"0":"")+x}
+function timerHTML(){
+return '<div class="timer'+(T.done?' end':'')+'"><div class="t"><span id="tm">'+fmt(T.left)+'</span><span class="msg">'+(T.done?"Time! Finish the rally.":"Round timer")+'</span></div>'
++'<button data-act="tmgo">'+(T.run?"Pause":"Start")+'</button><button data-act="tmreset">Reset</button></div>';
+}
+function resetTimer(){T.run=false;clearInterval(T.iv);T.done=false;T.left=GAME}
+function courtCard(title,sub,a,b,k){
+var s=eff(k);
+var out='<div class="court"><div class="ch">'+title+'<small>'+sub+'</small></div>';
+[[a,0],[b,1]].forEach(function(x,idx){
+var p=x[0],t=x[1];
+out+='<div class="side'+(s[t]>s[1-t]?' lead':'')+'"><div class="names"><div class="pl">'+nm(p)+'</div>'+'</div>'
++'<div class="sc"><button data-act="dec" data-k="'+k+'" data-t="'+t+'" aria-label="Minus one">−</button><div class="n">'+s[t]+'</div><button class="inc" data-act="inc" data-k="'+k+'" data-t="'+t+'" aria-label="Plus one">+</button></div></div>';
+if(idx===0)out+='<div class="vs">against</div>';
+});
+out+='<div class="pillrow">'+((s[0]>=11||s[1]>=11)?'<span class="pill win">11 reached: game over</span>':'<span class="pill">First to 11, or highest score when time is up</span>')+'</div></div>';
+return out;
+}
+function viewPlay(){
+var h='<div class="chips">';
+for(var i=0;i<9;i++)h+='<button class="chip'+(i===S.cur?' on':'')+(roundDone(i)?' done':'')+'" data-act="round" data-r="'+i+'" aria-label="Round '+(i+1)+'">'+(i+1)+'</button>';
+h+='</div>'+timerHTML();
+ROUNDS[S.cur].forEach(function(m,mi){h+=courtCard("Court "+(mi+1),"Round "+(S.cur+1)+" of 9",m[0],m[1],rk(S.cur,mi))});
+h+='<div class="rest"><div style="font-size:26px">🪑</div><div><b>Resting: '+names(resting(S.cur))+'</b><span>Cheer, keep score, and be ready.'+(S.cur<8?' Up next: '+names([].concat(ROUNDS[S.cur+1][0],ROUNDS[S.cur+1][1]))+'.':'')+'</span></div></div>';
+h+='<div class="navrow"><button class="btn" data-act="prev"'+(S.cur===0?' disabled style="opacity:.4"':'')+'>Previous round</button><button class="btn primary" data-act="next"'+(S.cur===8?' disabled style="opacity:.4"':'')+'>Next round</button></div>';
+return h;
+}
+function viewDraw(){
+var total=9*(GAME+SWAP)/60;
+var h='<div class="help"><b>Singles, one against one.</b> 9 rounds, 2 courts, 4 players on court each round. Everyone plays 4 games against 4 different people. Plan: '+Math.round(GAME/60)+' minutes a game plus about 1 minute to change over, so about '+Math.round(total)+' minutes. Finals add about 16, so about <b>'+Math.round(total+16)+' minutes</b> in total.</div>';
+h+='<div class="help"><b>Who are you?</b> Tap your name to see only your games.</div><div class="chips"><button class="chip name'+(S.me===null?' on':'')+'" data-act="me" data-i="-1">Everyone</button>';
+NAMES.forEach(function(n,i){h+='<button class="chip name'+(S.me===i?' on':'')+'" data-act="me" data-i="'+i+'">'+esc(n)+'</button>'});
+h+='</div>';
+if(S.me!==null){
+var me=S.me,cnt=0;
+ROUNDS.forEach(function(r,ri){
+var line=null;
+r.forEach(function(m,mi){
+if(m.indexOf(me)<0)return;
+var opp=m[0]===me?m[1]:m[0];
+cnt++;
+line='<div class="mine"><b>Court '+(mi+1)+'</b> · against <b>'+nm(opp)+'</b>'+'</div>';
+});
+h+='<button class="rc'+(ri===S.cur?' cur':'')+(line?' me':'')+'" data-act="goround" data-r="'+ri+'"><div class="rh">Round '+(ri+1)+'<span>'+(line?'you play':'you rest')+'</span></div>'+(line||'<div class="mine" style="color:var(--muted)">Rest. Cheer and keep score.</div>')+'</button>';
+});
+return h;
+}
+ROUNDS.forEach(function(r,ri){
+h+='<button class="rc'+(ri===S.cur?' cur':'')+'" data-act="goround" data-r="'+ri+'"><div class="rh">Round '+(ri+1)+'<span>Resting: '+names(resting(ri))+'</span></div>';
+r.forEach(function(m,mi){
+var k=rk(ri,mi),s=eff(k);
+h+='<div class="m"><i>C'+(mi+1)+'</i><div>'+nm(m[0])+' <span style="color:var(--muted)">vs</span> '+nm(m[1])+'</div>'+(played(k)?'<em>'+s[0]+'–'+s[1]+'</em>':'')+'</div>';
+});
+h+='</button>';
+});
+return h;
+}
+function viewTable(){
+var st=stats(),any=anyScores();
+var h='<h2 class="h2">Standings</h2><table><thead><tr><th>#</th><th class="nm">Player</th><th>G</th><th>W-D-L</th><th>Pts</th><th>Pts/G</th><th>+/−</th></tr></thead><tbody>';
+st.forEach(function(s,i){
+h+='<tr class="'+(any&&i===0?'top1':'')+'"><td class="rk">'+(i+1)+'</td><td class="nm">'+esc(s.name)+'</td><td>'+s.pl+'</td><td>'+s.w+'-'+s.d+'-'+s.l+'</td><td class="pts">'+s.pts+'</td><td>'+s.ppg.toFixed(2)+'</td><td>'+(s.diff>0?"+":"")+s.diff+'</td></tr>';
+});
+h+='</tbody></table>';
+h+='<p class="note">Win = 2 points, draw = 1, loss = 0. Ranked by points per game, so it stays fair if you stop early. Ties are split by average point difference.</p>';
+h+='<p class="note">Scores are saved on this phone only. Agree on one phone as the official scorekeeper.</p>';
+h+='<div class="navrow" style="margin-top:14px"><button class="btn'+(armed==="clear"?' danger':'')+'" data-act="clear">'+(armed==="clear"?"Tap again to clear all scores on this phone":"Clear all scores on this phone")+'</button></div>';
+return h;
+}
+function winner(k,a,b){if(!played(k))return null;var s=eff(k);return s[0]>s[1]?0:s[1]>s[0]?1:null}
+function viewFinals(){
+var h='<div class="help"><b>Optional, if there is time (about 16 minutes).</b> The top 4 in the table play: 1st vs 4th and 2nd vs 3rd, then a final and a bronze game.</div>';
+var sd=S.fin.locked?S.fin.seeds:stats().map(function(s){return s.i});
+h+='<h2 class="h2">Line-up'+(S.fin.locked?' (locked)':' (live from the table)')+'</h2><table><tbody>';
+sd.slice(0,4).forEach(function(p,i){h+='<tr><td class="rk">'+(i+1)+'</td><td class="nm">'+nm(p)+'</td></tr>'});
+h+='</tbody></table>';
+if(!S.fin.locked){
+h+='<div class="navrow" style="margin-top:12px"><button class="btn primary" data-act="lock">Lock line-up and start semi-finals</button></div><p class="note">Lock it only after the last round, so the order stops changing.</p>';
+return h;
+}
+h+='<div class="navrow" style="margin-top:12px"><button class="btn'+(armed==="unlock"?' danger':'')+'" data-act="unlock">'+(armed==="unlock"?"Tap again to erase finals scores":"Unlock and reset finals")+'</button></div>';
+h+='<div class="stage">Semi-finals</div>'+timerHTML();
+h+=courtCard("Court 1","Semi-final 1",sd[0],sd[3],"sf0");
+h+=courtCard("Court 2","Semi-final 2",sd[1],sd[2],"sf1");
+var w0=winner("sf0",sd[0],sd[3]),w1=winner("sf1",sd[1],sd[2]);
+if(w0===null||w1===null){h+='<p class="note">The final and bronze game appear when both semi-finals have a winner. Tied? Play one extra point.</p>';return h}
+var f0=w0===0?sd[0]:sd[3],l0=w0===0?sd[3]:sd[0],f1=w1===0?sd[1]:sd[2],l1=w1===0?sd[2]:sd[1];
+h+='<div class="stage">Final and bronze game</div>';
+h+=courtCard("Court 1","Final",f0,f1,"fin");
+h+=courtCard("Court 2","Bronze game",l0,l1,"br");
+var wf=winner("fin",f0,f1);
+if(wf!==null)h+='<div class="champ">Champion<b>'+nm(wf===0?f0:f1)+'</b></div>';
+return h;
+}
+function viewRules(){
+function R(t,items){return '<div class="rule"><h3>'+t+'</h3><ul>'+items.map(function(x){return '<li>'+x+'</li>'}).join("")+'</ul></div>'}
+return R("The night",["Singles: one against one. 9 rounds, 2 courts, about "+Math.round(GAME/60)+" minutes a game.","Everyone plays 4 games against 4 different people. The rest of the time you rest, cheer and keep score."])
++R("Playing",["Every rally is a point. First to 11, or the higher score when time is up.","The draw matches similar levels as much as possible, so most games are close.","Not sure about a point? Replay it. Say “stop” if someone could get hurt."])
++R("Points",["Win = 2, draw = 1, loss = 0. The Table ranks by points per game.","Optional finals for the top 4 at the end, if there is time."]);
+}
+var VIEWS={play:viewPlay,draw:viewDraw,table:viewTable,finals:viewFinals,rules:viewRules};
+var app=document.getElementById("app");
+function render(keep){
+var y=window.scrollY;
+app.innerHTML='<div class="top"><div class="ball"></div><div><h1>Squash night</h1><p>9 players · 2 courts · singles</p></div></div>'+VIEWS[S.tab]();
+document.querySelectorAll("#nav button").forEach(function(b){b.classList.toggle("on",b.dataset.tab===S.tab)});
+if(keep)window.scrollTo(0,y);
+}
+function tick(){
+if(!T.run)return;
+T.left=(T.end-Date.now())/1000;
+if(T.left<=0){
+try{if(navigator.vibrate)navigator.vibrate([300,150,300,150,600])}catch(e){}
+T.left=0;T.run=false;T.done=true;clearInterval(T.iv);render(true);return;
+}
+var el=document.getElementById("tm");if(el)el.textContent=fmt(T.left);
+}
+document.addEventListener("click",function(e){
+var b=e.target.closest("[data-act]");if(!b)return;
+var a=b.dataset.act;
+if(armed&&a!=="clear"&&a!=="unlock")armed=null;
+if(a==="tab"){S.tab=b.dataset.tab;armed=null;if(!T.run)resetTimer();save();render();window.scrollTo(0,0);return}
+if(a==="round"||a==="goround"||a==="prev"||a==="next"){
+var n=a==="prev"?S.cur-1:a==="next"?S.cur+1:+b.dataset.r;
+if(n<0||n>8)return;
+S.cur=n;if(a==="goround")S.tab="play";
+resetTimer();save();render();window.scrollTo(0,0);return;
+}
+if(a==="me"){S.me=+b.dataset.i<0?null:+b.dataset.i;save();render(true);return}
+if(a==="inc"||a==="dec"){
+var k=b.dataset.k,t=+b.dataset.t,s=(S.sc[k]||[0,0]).slice();
+s[t]=Math.max(0,s[t]+(a==="inc"?1:-1));S.sc[k]=s;
+try{if(navigator.vibrate)navigator.vibrate(15)}catch(x){}
+save();render(true);return;
+}
+if(a==="tmgo"){
+if(T.run){T.run=false;clearInterval(T.iv)}
+else{if(T.done||T.left<=0)resetTimer();T.run=true;T.end=Date.now()+T.left*1000;clearInterval(T.iv);T.iv=setInterval(tick,250)}
+render(true);return;
+}
+if(a==="tmreset"){resetTimer();render(true);return}
+if(a==="lock"){S.fin={locked:true,seeds:stats().map(function(s){return s.i})};save();render(true);return}
+if(a==="unlock"){
+if(armed!=="unlock"){armed="unlock";render(true);return}
+armed=null;S.fin={locked:false,seeds:null};["sf0","sf1","fin","br"].forEach(function(k){delete S.sc[k]});save();render(true);return;
+}
+if(a==="clear"){
+if(armed!=="clear"){armed="clear";render(true);return}
+armed=null;S.sc={};S.fin={locked:false,seeds:null};save();render(true);return;
+}
+});
+render();
+})();
+</script>
+</body>
+</html>
