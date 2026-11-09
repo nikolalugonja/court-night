@@ -133,6 +133,7 @@ td.pts{font-weight:900}
 var KEY="squash-night-v6";
 var NAMES=["Nikola","Veljko","Gezi","Micah","Serena","Ivan","Sanja","Micaela","Hannah"];
 var PRI=[4,6,7,8,0,1,2,3,5];
+var API="https://api.restful-api.dev/objects/ff808181a09d98f701a1c182d2d072da";
 var GAME=420;                    // 7 minutes per round
 var SWAP=60;                     // about 1 minute to change over
 // Fixed draw, identical for everyone: 2 singles matches per round, [player, player]
@@ -140,7 +141,7 @@ var ROUNDS=[[[2,1],[4,3]],[[7,5],[6,8]],[[0,4],[3,1]],[[2,8],[5,6]],[[7,4],[0,3]
 function load(){try{var s=localStorage.getItem(KEY);return s?JSON.parse(s):null}catch(e){return null}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 var S=load()||{};
-S.cur=S.cur||0;S.tab=S.tab||"play";S.sc=S.sc||{};S.me=(S.me===undefined?null:S.me);S.fin=S.fin||{locked:false,seeds:null};
+S.cur=S.cur||0;S.tab=S.tab||"play";S.sc=S.sc||{};S.me=(S.me===undefined?null:S.me);S.fin=S.fin||{locked:false,seeds:null};S.dirty=S.dirty||{};S.finDirty=!!S.finDirty;S.edit=!!S.edit;
 var armed=null;
 var T={left:GAME,run:false,end:0,iv:null,done:false};
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
@@ -180,7 +181,7 @@ var out='<div class="court"><div class="ch">'+title+'<small>'+sub+'</small></div
 [[a,0],[b,1]].forEach(function(x,idx){
 var p=x[0],t=x[1];
 out+='<div class="side'+(s[t]>s[1-t]?' lead':'')+'"><div class="names"><div class="pl">'+nm(p)+'</div>'+'</div>'
-+'<div class="sc"><button data-act="dec" data-k="'+k+'" data-t="'+t+'" aria-label="Minus one">−</button><div class="n">'+s[t]+'</div><button class="inc" data-act="inc" data-k="'+k+'" data-t="'+t+'" aria-label="Plus one">+</button></div></div>';
++'<div class="sc">'+(S.edit?'<button data-act="dec" data-k="'+k+'" data-t="'+t+'" aria-label="Minus one">−</button>':'')+'<div class="n">'+s[t]+'</div>'+(S.edit?'<button class="inc" data-act="inc" data-k="'+k+'" data-t="'+t+'" aria-label="Plus one">+</button>':'')+'</div></div>';
 if(idx===0)out+='<div class="vs">against</div>';
 });
 out+='<div class="pillrow">'+((s[0]>=11||s[1]>=11)?'<span class="pill win">11 reached: game over</span>':(s[0]===s[1]&&s[0]>0?'<span class="pill" style="background:var(--red);color:var(--red-ink)">Level: next point wins</span>':'<span class="pill">First to 11, or highest score when time is up. If level, next point wins.</span>'))+'</div></div>';
@@ -189,7 +190,7 @@ return out;
 function viewPlay(){
 var h='<div class="chips">';
 for(var i=0;i<9;i++)h+='<button class="chip'+(i===S.cur?' on':'')+(roundDone(i)?' done':'')+'" data-act="round" data-r="'+i+'" aria-label="Round '+(i+1)+'">'+(i+1)+'</button>';
-h+='</div>'+timerHTML();
+h+='</div>'+editBar()+timerHTML();
 ROUNDS[S.cur].forEach(function(m,mi){h+=courtCard("Court "+(mi+1),"Round "+(S.cur+1)+" of 9",m[0],m[1],rk(S.cur,mi))});
 h+='<div class="rest"><div style="font-size:26px">🪑</div><div><b>Resting: '+names(resting(S.cur))+'</b><span>Cheer, keep score, and be ready.'+(S.cur<8?' Up next: '+names([].concat(ROUNDS[S.cur+1][0],ROUNDS[S.cur+1][1]))+'.':'')+'</span></div></div>';
 h+='<div class="navrow"><button class="btn" data-act="prev"'+(S.cur===0?' disabled style="opacity:.4"':'')+'>Previous round</button><button class="btn primary" data-act="next"'+(S.cur===8?' disabled style="opacity:.4"':'')+'>Next round</button></div>';
@@ -233,15 +234,15 @@ h+='<tr class="'+(any&&i===0?'top1':'')+'"><td class="rk">'+(i+1)+'</td><td clas
 });
 h+='</tbody></table>';
 h+='<p class="note">Win = 1 point, loss = 0. There are no draws: if it is level when time is up, the next point wins. Ranked by points per game, so it stays fair if you stop early. Ties are split by average point difference.</p>';
-h+='<p class="note">Scores are saved on this phone only. Agree on one phone as the official scorekeeper.</p>';
-h+='<div class="navrow" style="margin-top:14px"><button class="btn'+(armed==="clear"?' danger':'')+'" data-act="clear">'+(armed==="clear"?"Tap again to clear all scores on this phone":"Clear all scores on this phone")+'</button></div>';
+h+='<p class="note">Scores are shared live: everyone sees the same table, updated every few seconds. To enter scores, tap “Keep score” on the Play tab.</p>';
+
 return h;
 }
 function winner(k,a,b){if(!played(k))return null;var s=eff(k);return s[0]>s[1]?0:s[1]>s[0]?1:null}
 function viewFinals(){
 var h='<div class="help"><b>Optional, if there is time (about 16 minutes).</b> The top 4 in the table play: 1st vs 4th and 2nd vs 3rd, then a final and a bronze game.</div>';
 var sd=S.fin.locked?S.fin.seeds:stats().map(function(s){return s.i});
-h+='<h2 class="h2">Line-up'+(S.fin.locked?' (locked)':' (live from the table)')+'</h2><table><tbody>';
+h+=editBar()+'<h2 class="h2">Line-up'+(S.fin.locked?' (locked)':' (live from the table)')+'</h2><table><tbody>';
 sd.slice(0,4).forEach(function(p,i){h+='<tr><td class="rk">'+(i+1)+'</td><td class="nm">'+nm(p)+'</td></tr>'});
 h+='</tbody></table>';
 if(!S.fin.locked){
@@ -268,12 +269,49 @@ return R("The night",["Singles: one against one. 9 rounds, 2 courts, about "+Mat
 +R("Playing",["Every rally is a point. First to 11, or the higher score when time is up.","The draw matches similar levels as much as possible, so most games are close."])
 +R("Points",["Win = 1 point, loss = 0. No draws: if it is level when time is up, play one deciding point. The Table ranks by points per game.","Optional finals for the top 4 at the end, if there is time."]);
 }
+function editBar(){return '<div class="navrow" style="margin-bottom:14px"><button class="btn'+(S.edit?' primary':'')+'" data-act="edit">'+(S.edit?"Scorekeeping is ON. Tap to switch to view only":"View only. Tap here to keep score")+'</button></div>'}
+var online=null,busy=false,pt=null;
+function setStatus(){var el=document.getElementById("sync");if(!el)return;el.textContent=online===null?"connecting…":(online?"● live":"○ offline, saved on this phone");el.style.color=online?"var(--good)":"var(--muted)"}
+function rget(){return fetch(API,{cache:"no-store"}).then(function(r){if(!r.ok)throw new Error(r.status);return r.json()}).then(function(j){return j.data||{}})}
+function rput(d){return fetch(API,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:"court-night",data:d})}).then(function(r){if(!r.ok)throw new Error(r.status);return r.json()})}
+function schedulePush(){clearTimeout(pt);pt=setTimeout(doPush,1000)}
+function doPush(){
+pt=null;
+if(busy){schedulePush();return}
+busy=true;
+var ks=Object.keys(S.dirty),snap={},fd=S.finDirty,fsnap=JSON.stringify(S.fin);
+ks.forEach(function(k){snap[k]=S.sc[k]?JSON.stringify(S.sc[k]):null});
+rget().then(function(d){
+d.sc=d.sc||{};
+ks.forEach(function(k){if(S.sc[k])d.sc[k]=S.sc[k];else delete d.sc[k]});
+if(fd)d.fin=S.fin;
+return rput(d)
+}).then(function(){
+ks.forEach(function(k){var cur=S.sc[k]?JSON.stringify(S.sc[k]):null;if(cur===snap[k])delete S.dirty[k]});
+if(fd&&JSON.stringify(S.fin)===fsnap)S.finDirty=false;
+save();online=true;busy=false;setStatus();
+if(Object.keys(S.dirty).length||S.finDirty)schedulePush();
+}).catch(function(){online=false;busy=false;setStatus();clearTimeout(pt);pt=setTimeout(doPush,8000)});
+}
+function pull(){
+if(busy||pt||Object.keys(S.dirty).length||S.finDirty||document.hidden)return;
+busy=true;
+rget().then(function(d){
+busy=false;online=true;
+var sc=d.sc||{},fin=d.fin||{locked:false,seeds:null};
+if(JSON.stringify(sc)!==JSON.stringify(S.sc)||JSON.stringify(fin)!==JSON.stringify(S.fin)){S.sc=sc;S.fin=fin;save();render(true)}else setStatus();
+}).catch(function(){busy=false;online=false;setStatus()});
+}
+setInterval(pull,10000);
+document.addEventListener("visibilitychange",function(){if(!document.hidden)pull()});
+if(Object.keys(S.dirty).length||S.finDirty)schedulePush();
+pull();
 var VIEWS={play:viewPlay,draw:viewDraw,table:viewTable,finals:viewFinals,rules:viewRules};
 var app=document.getElementById("app");
 function render(keep){
 var y=window.scrollY;
-app.innerHTML='<div class="top"><div class="ball"></div><div><h1>Squash night</h1><p>9 players · 2 courts · singles</p></div></div>'+VIEWS[S.tab]();
-document.querySelectorAll("#nav button").forEach(function(b){b.classList.toggle("on",b.dataset.tab===S.tab)});
+app.innerHTML='<div class="top"><div class="ball"></div><div><h1>Squash night</h1><p>9 players · 2 courts · singles · <span id="sync"></span></p></div></div>'+VIEWS[S.tab]();
+document.querySelectorAll("#nav button").forEach(function(b){b.classList.toggle("on",b.dataset.tab===S.tab)});setStatus();
 if(keep)window.scrollTo(0,y);
 }
 function tick(){
@@ -297,9 +335,11 @@ S.cur=n;if(a==="goround")S.tab="play";
 resetTimer();save();render();window.scrollTo(0,0);return;
 }
 if(a==="me"){S.me=+b.dataset.i<0?null:+b.dataset.i;save();render(true);return}
+if(a==="edit"){S.edit=!S.edit;save();render(true);return}
+if((a==="inc"||a==="dec"||a==="lock"||a==="unlock")&&!S.edit)return;
 if(a==="inc"||a==="dec"){
 var k=b.dataset.k,t=+b.dataset.t,s=(S.sc[k]||[0,0]).slice();
-s[t]=Math.max(0,s[t]+(a==="inc"?1:-1));S.sc[k]=s;
+s[t]=Math.max(0,s[t]+(a==="inc"?1:-1));S.sc[k]=s;S.dirty[k]=1;schedulePush();
 try{if(navigator.vibrate)navigator.vibrate(15)}catch(x){}
 save();render(true);return;
 }
@@ -309,14 +349,10 @@ else{if(T.done||T.left<=0)resetTimer();T.run=true;T.end=Date.now()+T.left*1000;c
 render(true);return;
 }
 if(a==="tmreset"){resetTimer();render(true);return}
-if(a==="lock"){S.fin={locked:true,seeds:stats().map(function(s){return s.i})};save();render(true);return}
+if(a==="lock"){S.fin={locked:true,seeds:stats().map(function(s){return s.i})};S.finDirty=true;save();schedulePush();render(true);return}
 if(a==="unlock"){
 if(armed!=="unlock"){armed="unlock";render(true);return}
-armed=null;S.fin={locked:false,seeds:null};["sf0","sf1","fin","br"].forEach(function(k){delete S.sc[k]});save();render(true);return;
-}
-if(a==="clear"){
-if(armed!=="clear"){armed="clear";render(true);return}
-armed=null;S.sc={};S.fin={locked:false,seeds:null};save();render(true);return;
+armed=null;S.fin={locked:false,seeds:null};["sf0","sf1","fin","br"].forEach(function(k){delete S.sc[k];S.dirty[k]=1});S.finDirty=true;save();schedulePush();render(true);return;
 }
 });
 render();
