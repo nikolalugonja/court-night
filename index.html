@@ -130,12 +130,13 @@ td.pts{font-weight:900}
 <script>
 (function(){
 "use strict";
-var KEY="squash-night-v5";
+var KEY="squash-night-v6";
 var NAMES=["Nikola","Veljko","Gezi","Michal","Serena","Ivan","Sanja","Micaela","Hannah"];
+var PRI=[4,6,7,8,0,1,2,3,5];
 var GAME=420;                    // 7 minutes per round
 var SWAP=60;                     // about 1 minute to change over
 // Fixed draw, identical for everyone: 2 singles matches per round, [player, player]
-var ROUNDS=[[[2,1],[4,3]],[[6,5],[8,7]],[[0,3],[4,5]],[[2,6],[1,0]],[[7,4],[8,5]],[[2,0],[3,1]],[[6,8],[7,5]],[[4,0],[2,3]],[[1,8],[6,7]]];
+var ROUNDS=[[[2,1],[4,3]],[[7,5],[6,8]],[[0,4],[3,1]],[[2,8],[5,6]],[[7,4],[0,3]],[[1,5],[0,2]],[[6,4],[8,7]],[[3,2],[1,0]],[[5,8],[6,7]]];
 function load(){try{var s=localStorage.getItem(KEY);return s?JSON.parse(s):null}catch(e){return null}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 var S=load()||{};
@@ -148,7 +149,8 @@ function raw(k){return S.sc[k]||[0,0]}
 function played(k){var s=raw(k);return s[0]+s[1]>0}
 function eff(k){return raw(k)}
 function rk(ri,mi){return "r"+ri+"c"+mi}
-function roundDone(ri){return played(rk(ri,0))&&played(rk(ri,1))}
+function decided(k){var s=raw(k);return s[0]+s[1]>0&&s[0]!==s[1]}
+function roundDone(ri){return decided(rk(ri,0))&&decided(rk(ri,1))}
 function anyScores(){for(var r=0;r<9;r++)for(var m=0;m<2;m++)if(played(rk(r,m)))return true;return false}
 function resting(ri){var p=[];ROUNDS[ri].forEach(function(m){p=p.concat(m)});return NAMES.map(function(n,i){return i}).filter(function(i){return p.indexOf(i)<0})}
 function names(list){return list.map(nm).join(", ")}
@@ -156,14 +158,14 @@ function stats(){
 var st=NAMES.map(function(n,i){return {i:i,name:n,pl:0,w:0,d:0,l:0,pf:0,pa:0}});
 ROUNDS.forEach(function(r,ri){
 r.forEach(function(m,mi){
-var k=rk(ri,mi);if(!played(k))return;
+var k=rk(ri,mi);if(!decided(k))return;
 var s=eff(k),res=s[0]>s[1]?1:s[0]<s[1]?-1:0;
-function add(i,f,a,rr){var x=st[i];x.pl++;x.pf+=f;x.pa+=a;if(rr>0)x.w++;else if(rr<0)x.l++;else x.d++}
+function add(i,f,a,rr){var x=st[i];x.pl++;x.pf+=f;x.pa+=a;if(rr>0)x.w++;else x.l++}
 add(m[0],s[0],s[1],res);add(m[1],s[1],s[0],-res);
 });
 });
-st.forEach(function(s){s.pts=s.w*2+s.d;s.ppg=s.pl?s.pts/s.pl:0;s.diff=s.pf-s.pa;s.avgd=s.pl?s.diff/s.pl:0});
-st.sort(function(a,b){return b.ppg-a.ppg||b.avgd-a.avgd||b.pf-a.pf||a.i-b.i});
+st.forEach(function(s){s.pts=s.w;s.ppg=s.pl?s.pts/s.pl:0;s.diff=s.pf-s.pa;s.avgd=s.pl?s.diff/s.pl:0});
+st.sort(function(a,b){return b.ppg-a.ppg||b.avgd-a.avgd||b.pf-a.pf||PRI.indexOf(a.i)-PRI.indexOf(b.i)});
 return st;
 }
 function fmt(s){s=Math.max(0,Math.ceil(s));var m=Math.floor(s/60),x=s%60;return m+":"+(x<10?"0":"")+x}
@@ -181,7 +183,7 @@ out+='<div class="side'+(s[t]>s[1-t]?' lead':'')+'"><div class="names"><div clas
 +'<div class="sc"><button data-act="dec" data-k="'+k+'" data-t="'+t+'" aria-label="Minus one">−</button><div class="n">'+s[t]+'</div><button class="inc" data-act="inc" data-k="'+k+'" data-t="'+t+'" aria-label="Plus one">+</button></div></div>';
 if(idx===0)out+='<div class="vs">against</div>';
 });
-out+='<div class="pillrow">'+((s[0]>=11||s[1]>=11)?'<span class="pill win">11 reached: game over</span>':'<span class="pill">First to 11, or highest score when time is up</span>')+'</div></div>';
+out+='<div class="pillrow">'+((s[0]>=11||s[1]>=11)?'<span class="pill win">11 reached: game over</span>':(s[0]===s[1]&&s[0]>0?'<span class="pill" style="background:var(--red);color:var(--red-ink)">Level: next point wins</span>':'<span class="pill">First to 11, or highest score when time is up. If level, next point wins.</span>'))+'</div></div>';
 return out;
 }
 function viewPlay(){
@@ -225,12 +227,12 @@ return h;
 }
 function viewTable(){
 var st=stats(),any=anyScores();
-var h='<h2 class="h2">Standings</h2><table><thead><tr><th>#</th><th class="nm">Player</th><th>G</th><th>W-D-L</th><th>Pts</th><th>Pts/G</th><th>+/−</th></tr></thead><tbody>';
+var h='<h2 class="h2">Standings</h2><table><thead><tr><th>#</th><th class="nm">Player</th><th>G</th><th>W-L</th><th>Pts</th><th>Pts/G</th><th>+/−</th></tr></thead><tbody>';
 st.forEach(function(s,i){
-h+='<tr class="'+(any&&i===0?'top1':'')+'"><td class="rk">'+(i+1)+'</td><td class="nm">'+esc(s.name)+'</td><td>'+s.pl+'</td><td>'+s.w+'-'+s.d+'-'+s.l+'</td><td class="pts">'+s.pts+'</td><td>'+s.ppg.toFixed(2)+'</td><td>'+(s.diff>0?"+":"")+s.diff+'</td></tr>';
+h+='<tr class="'+(any&&i===0?'top1':'')+'"><td class="rk">'+(i+1)+'</td><td class="nm">'+esc(s.name)+'</td><td>'+s.pl+'</td><td>'+s.w+'-'+s.l+'</td><td class="pts">'+s.pts+'</td><td>'+s.ppg.toFixed(2)+'</td><td>'+(s.diff>0?"+":"")+s.diff+'</td></tr>';
 });
 h+='</tbody></table>';
-h+='<p class="note">Win = 2 points, draw = 1, loss = 0. Ranked by points per game, so it stays fair if you stop early. Ties are split by average point difference.</p>';
+h+='<p class="note">Win = 1 point, loss = 0. There are no draws: if it is level when time is up, the next point wins. Ranked by points per game, so it stays fair if you stop early. Ties are split by average point difference.</p>';
 h+='<p class="note">Scores are saved on this phone only. Agree on one phone as the official scorekeeper.</p>';
 h+='<div class="navrow" style="margin-top:14px"><button class="btn'+(armed==="clear"?' danger':'')+'" data-act="clear">'+(armed==="clear"?"Tap again to clear all scores on this phone":"Clear all scores on this phone")+'</button></div>';
 return h;
@@ -263,8 +265,8 @@ return h;
 function viewRules(){
 function R(t,items){return '<div class="rule"><h3>'+t+'</h3><ul>'+items.map(function(x){return '<li>'+x+'</li>'}).join("")+'</ul></div>'}
 return R("The night",["Singles: one against one. 9 rounds, 2 courts, about "+Math.round(GAME/60)+" minutes a game.","Everyone plays 4 games against 4 different people. The rest of the time you rest, cheer and keep score."])
-+R("Playing",["Every rally is a point. First to 11, or the higher score when time is up.","The draw matches similar levels as much as possible, so most games are close.","Not sure about a point? Replay it. Say “stop” if someone could get hurt."])
-+R("Points",["Win = 2, draw = 1, loss = 0. The Table ranks by points per game.","Optional finals for the top 4 at the end, if there is time."]);
++R("Playing",["Every rally is a point. First to 11, or the higher score when time is up.","The draw matches similar levels as much as possible, so most games are close."])
++R("Points",["Win = 1 point, loss = 0. No draws: if it is level when time is up, play one deciding point. The Table ranks by points per game.","Optional finals for the top 4 at the end, if there is time."]);
 }
 var VIEWS={play:viewPlay,draw:viewDraw,table:viewTable,finals:viewFinals,rules:viewRules};
 var app=document.getElementById("app");
