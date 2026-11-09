@@ -130,12 +130,12 @@ td.pts{font-weight:900}
 <script>
 (function(){
 "use strict";
-var KEY="squash-night-v4";
+var KEY="squash-night-v5";
 var NAMES=["Nikola","Veljko","Gezi","Michal","Serena","Ivan","Sanja","Micaela","Hannah"];
 var GAME=420;                    // 7 minutes per round
 var SWAP=60;                     // about 1 minute to change over
 // Fixed draw, identical for everyone: 2 singles matches per round, [player, player]
-var ROUNDS=[[[3,4],[8,6]],[[5,7],[0,1]],[[2,0],[5,6]],[[3,1],[4,8]],[[7,6],[2,1]],[[5,8],[0,3]],[[2,7],[4,6]],[[1,5],[0,4]],[[3,2],[8,7]]];
+var ROUNDS=[[[2,1],[4,3]],[[6,5],[8,7]],[[0,3],[4,5]],[[2,6],[1,0]],[[7,4],[8,5]],[[2,0],[3,1]],[[6,8],[7,5]],[[4,0],[2,3]],[[1,8],[6,7]]];
 function load(){try{var s=localStorage.getItem(KEY);return s?JSON.parse(s):null}catch(e){return null}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 var S=load()||{};
